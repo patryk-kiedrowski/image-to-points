@@ -1,18 +1,27 @@
 const wrapper = document.getElementById('wrapper');
 document.addEventListener('mousemove', handleMove);
 
-myMouseX = 0;
-myMouseY = 0;
-
+var myMouseX = 0;
+var myMouseY = 0;
 var img;
 var i = 0;
 var j = 0;
 var pixels = [];
 var points = [];
-var odd = false;
 var mouse;
 var zeroVector;
 var inverseScaleUp;
+
+var fpsCounter = document.querySelector('#fps');
+var inputs = {
+  'scaleUp': document.querySelector('#scaleUp'),
+  'brightnessThreshold': document.querySelector('#brightnessThreshold'),
+  'pointSize': document.querySelector('#pointSize'),
+  'customFrameRate': document.querySelector('#customFrameRate'),
+  'mouseDistanceForInteraction': document.querySelector('#mouseDistanceForInteraction'),
+  'pointColor': document.querySelector('#pointColor'),
+  'file': document.querySelector('#file')
+};
 
 // settings variables
 var scaleUp = 1;
@@ -20,14 +29,42 @@ var brightnessThreshold = 40;
 var pointSize = 1.5;
 var customFrameRate = 24;
 var mouseDistanceForInteraction = 25;
+var pointColor = { 'r': 9, 'g': 133, 'b': 175 };
 
 function handleMove(event) {
   myMouseX = Math.floor(event.clientX);
   myMouseY = Math.floor(event.clientY);
 }
 
+function hexToRGB(hex) {
+  var r = parseInt(hex.slice(1, 3), 16),
+      g = parseInt(hex.slice(3, 5), 16),
+      b = parseInt(hex.slice(5, 7), 16);
+
+  return { 'r': r, 'g': g, 'b': b };
+}
+
+function setValues() {
+  inputs['scaleUp'].value = scaleUp;
+  inputs['brightnessThreshold'].value = brightnessThreshold;
+  inputs['pointSize'].value = pointSize;
+  inputs['customFrameRate'].value = customFrameRate;
+  inputs['mouseDistanceForInteraction'].value = mouseDistanceForInteraction;
+}
+
+function addListeners() {
+  inputs['scaleUp'].addEventListener('input', event => scaleUp = event.target.value);
+  inputs['brightnessThreshold'].addEventListener('input', event => brightnessThreshold = event.target.value);
+  inputs['pointSize'].addEventListener('input', event => pointSize = event.target.value);
+  inputs['customFrameRate'].addEventListener('input', event => customFrameRate = event.target.value);
+  inputs['mouseDistanceForInteraction'].addEventListener('input', event => mouseDistanceForInteraction = event.target.value);
+  inputs['pointColor'].addEventListener('input', event => pointColor = hexToRGB(event.target.value));
+}
+
 function preload() {
-  img = loadImage('pika.png');
+  img = loadImage('bird-alt.png');
+  setValues();
+  addListeners();
 }
 
 function setup() {
@@ -54,7 +91,8 @@ function setup() {
     // clears out the red and green channels (unnecessarily, probably), sets the blue channel to full saturation
     // and saves the average of channels to the alpha channel of the pixel
       if (newCondition === 0) {
-      img.pixels[i] = img.pixels[i + 1] = 0;
+      img.pixels[i] = 0;
+      img.pixels[i + 1] = 0;
       img.pixels[i + 2] = 255;
       img.pixels[i + 3] = avg;
 
@@ -89,21 +127,15 @@ function draw() {
   noStroke();
   scale(scaleUp);
 
-  if (odd) {
-    var offset = 1;
-  } else {
-    var offset = 0;
-  }
-  odd = !odd;
-
   for (let i = 0; i < points.length; i++) {
     points[i].behaviors();
     points[i].draw();
     points[i].update();
   }
+
+  fpsCounter.innerHTML = Math.round(frameRate());
+  frameRate(customFrameRate);
 }
-
-
 
 function Point(x, y, opacity, dx, dy, orgX, orgY) {
   // Point class definition
@@ -125,7 +157,7 @@ function Point(x, y, opacity, dx, dy, orgX, orgY) {
   // END-VECTOR VARIABLES
 
   this.draw = function() {
-    fill(9, 133, 175, this.opacity);
+    fill(pointColor['r'], pointColor['g'], pointColor['b'], this.opacity);
     ellipse(this.pos.x, this.pos.y, pointSize, pointSize); // VECTOR DRAW
   }
 
