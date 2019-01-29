@@ -10,13 +10,65 @@
 
     <title>Image to points algorithm by Patryk Kiedrowski</title>
     <link rel="stylesheet" type="text/css" href="image-to-points.css">
-    <link href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,300i,400,400i,600&amp;subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Saira:400,700" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css" integrity="sha384-+d0P83n9kaQMCwj8F4RJB66tzIwOKmrdb46+porD/OvrJ+37WqIM7UoBtwHO6Nlg" crossorigin="anonymous">
   </head>
 
   <body>
     <div class="wrapper" id="wrapper">
       <!-- <input type="file" id="file"> -->
+    </div>
+
+    <div class="controls-wrapper">
+      <div class="controls-wrapper__top">
+        <h1 class="controls-wrapper__heading">Controls</h1>
+        <p class="fps">FPS: <span id="fps">60</span></p>
+      </div>
+
+      <h3 class="control__name">Scale up</h3>
+      <div class="control">
+        <p class="control__value">0</p>
+        <input id="scaleUp" min="0" max="10" step="0.1" class="control__range" type="range">
+        <p class="control__value">10</p>
+      </div>
+
+      <h3 class="control__name">Brightness threshold</h3>
+      <div class="control">
+        <p class="control__value">0</p>
+        <input id="brightnessThreshold" min="0" max="255" class="control__range" type="range">
+        <p class="control__value">255</p>
+      </div>
+
+      <h3 class="control__name">Point size (px)</h3>
+      <div class="control">
+        <p class="control__value">0</p>
+        <input id="pointSize" min="0" max="50" step="0.1" class="control__range" type="range">
+        <p class="control__value">50</p>
+      </div>
+
+      <h3 class="control__name">Mouse distance (px)</h3>
+      <div class="control">
+        <p class="control__value">0</p>
+        <input id="mouseDistanceForInteraction" min="0" max="255" class="control__range" type="range">
+        <p class="control__value">255</p>
+      </div>
+
+      <h3 class="control__name">Max framerate (fps)</h3>
+      <div class="control">
+        <p class="control__value">0</p>
+        <input id="customFrameRate" min="0" max="100" class="control__range" type="range">
+        <p class="control__value">100</p>
+      </div>
+
+      <h3 class="control__name">Point color</h3>
+      <div class="control">
+        <input id="pointColor" class="control__color" type="color">
+      </div>
+
+      <h3 class="control__name">Image input</h3>
+      <div class="control">
+        <input id="file" class="control__file" type="file">
+      </div>
     </div>
 
     
