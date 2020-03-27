@@ -29,9 +29,9 @@ const inputs = {
 let scaleUp = 1;
 let brightnessThreshold = 40;
 let pointSize = 2.5;
-let customFrameRate = 30;
+let customFrameRate = 40;
 let mouseDistanceForInteraction = 50;
-let pointColor = { 'r': 9, 'g': 133, 'b': 175 };
+let pointColor = { r: 9, g: 133, b: 175 };
 let probability = 30;
 
 function handleMove(event) {
@@ -76,9 +76,7 @@ function preload() {
 }
 
 function setup() {
-  console.log(img);
   setValues();
-  console.log({'scaleUp': scaleUp, 'brightnessThreshold': brightnessThreshold, 'pointSize': pointSize});
   points = [];
   zeroVector = createVector(0, 0);
   scaleUp = Math.round((window.innerHeight / img.height) * 100) / 100;
@@ -92,53 +90,57 @@ function setup() {
   img.loadPixels();
 
   for (let i = 0; i < img.pixels.length; i += 4) {
-    // holds the average value from all of the channels (R, G, B) for the current pixel
-    const avg = (img.pixels[i] + img.pixels[i+1] + img.pixels[i+2]) / 3;
-    const newCondition = Math.floor(Math.random() * probability);
+    const pixel = { 
+      r: img.pixels[i],
+      g: img.pixels[i + 1],
+      b: img.pixels[i + 2],
+      a: img.pixels[i + 3]
+    }
 
-    // clears out all the values of the current pixel
-    img.pixels[i] = img.pixels[i + 1] = img.pixels[i + 2] = img.pixels[i + 3] = 0;
+    const avgOpacity = (pixel.r + pixel.g + pixel.b) / 3;
+    const pixelShouldBeIncluded = (Math.floor(Math.random() * probability)) === 0;
 
-    // the condition determines how many pixels make it through to the final array of objects,
-    // clears out the red and green channels (unnecessarily, probably), sets the blue channel to full saturation
-    // and saves the average of channels to the alpha channel of the pixel
-      if (newCondition === 0) {
-      img.pixels[i] = 0;
-      img.pixels[i + 1] = 0;
-      img.pixels[i + 2] = 255;
-      img.pixels[i + 3] = avg;
+    if (pixelShouldBeIncluded) {
+      if (avgOpacity >= brightnessThreshold) {
+        const x = Math.floor((i / 4) % img.width);
+        const y = Math.floor((i / 4) / img.width);
+        const dx = Math.random() - 0.5;
+        const dy = Math.random() - 0.5;
 
-      // limits the amount of objects created by filtering out pixels that are too dim to be noticeable
-      if (avg >= brightnessThreshold) {
         points.push(
-          new Point(
-            Math.floor((i / 4) % img.width), // x
-            Math.floor((i / 4) / img.width), // y
-            avg, // opacity
-            Math.random() - 0.5, // dx
-            Math.random() - 0.5, // dy
-            Math.floor((i / 4) % img.width), // orgX
-            Math.floor((i / 4) / img.width), // orgY
-          )
+          new Point(x, y, dx, dy, avgOpacity)
         );
       }
     }
   }
 
-  img.updatePixels();
   console.log(points.length);
   scale(scaleUp);
 }
 
 function draw() {
-  // updates mouse position based on mouse coordinates times the inverse of scaleUp to level the side effects of scaleUp
-  mouse = createVector(myMouseX * inverseScaleUp, myMouseY * inverseScaleUp);
+  cleanCanvas();
+  updateMouseVector();
+  updatePoints();
+  drawFPS();
+}
 
+/**
+ * updates mouse position based on mouse coordinates times 
+ * the inverse of scaleUp to level the side effects of scaleUp
+ */
+function updateMouseVector() {
+  mouse = createVector(myMouseX * inverseScaleUp, myMouseY * inverseScaleUp);
+}
+
+function cleanCanvas() {
   fill(0);
   rect(0, 0, img.width * scaleUp, img.height * scaleUp);
   noStroke();
   scale(scaleUp);
+}
 
+function updatePoints() {
   for (let i = 0; i < points.length; i++) {
     const point = points[i];
 
@@ -146,43 +148,55 @@ function draw() {
     point.draw();
     point.update();
   }
+}
 
-  fpsCounter.innerHTML = Math.round(frameRate());
-  // frameRate(customFrameRate * 10);
+function drawFPS() {
+  fpsCounter.innerHTML = Math.round(getFrameRate());
 }
 
 class Point {
-  constructor(x, y, opacity, dx, dy, orgX, orgY) {
+  constructor(x, y, dx, dy, opacity) {
     this.x = x;
     this.y = y;
-    this.orgX = orgX;
-    this.orgY = orgY;
-    this.opacity = opacity;
     this.dx = dx;
     this.dy = dy;
+    this.initialX = x;
+    this.initialY = y;
+    this.opacity = opacity;
 
-    // VECTOR VARIABLES
-    this.pos = createVector(random(img.width), random(img.height));
-    this.vel = createVector(0);
-    this.acc = createVector(0);
+    this.position = createVector(random(img.width), random(img.height));
+    this.velocity = createVector(0);
+    this.acceleration = createVector(0);
     this.target = createVector(x, y);
     this.maxSpeed = (Math.random() * 40) + 10;
     this.maxForce = 1;
-    // END-VECTOR VARIABLES
   }
 
   draw() {
-    fill(pointColor['r'], pointColor['g'], pointColor['b'], this.opacity);
-    ellipse(this.pos.x, this.pos.y, pointSize, pointSize); // VECTOR DRAW
+    this.variableOpacityAndSize();
   }
 
-  // VECTOR METHODS
+  variableOpacity() {
+    fill(pointColor.r, pointColor.g, pointColor.b, this.opacity);
+    ellipse(this.position.x, this.position.y, pointSize, pointSize);
+  }
+  
+  variableSize() {
+    fill(pointColor.r, pointColor.g, pointColor.b, 255);
+    ellipse(this.position.x, this.position.y, 5 * this.opacity / 255, 5 * this.opacity / 255);
+  }
+
+  variableOpacityAndSize() {
+    fill(pointColor.r, pointColor.g, pointColor.b, this.opacity);
+    ellipse(this.position.x, this.position.y, 5 * this.opacity / 255, 5 * this.opacity / 255);
+  }
+
   update() {
-    this.pos.add(this.vel);
-    this.vel.add(this.acc);
+    this.position.add(this.velocity);
+    this.velocity.add(this.acceleration);
     
     // clears accelaration by multiplying it by 0
-    this.acc.mult(0);
+    this.acceleration.mult(0);
   }
 
   behaviors() {
@@ -197,13 +211,12 @@ class Point {
   }
 
   applyForce(force) {
-    this.acc.add(force);
+    this.acceleration.add(force);
   }
 
   arrive(target) {
-    // sub = subtract
-    const desiredLocation = p5.Vector.sub(target, this.pos);
-    const distance = desiredLocation.mag(); // magnitude means how far away the vector is
+    const desiredLocation = p5.Vector.sub(target, this.position);
+    const distance = desiredLocation.mag();
     let speed = this.maxSpeed * (distance / img.width);
 
     if (distance < 1) {
@@ -212,34 +225,31 @@ class Point {
 
     desiredLocation.setMag(speed);
 
-    const steer = p5.Vector.sub(desiredLocation, this.vel);
+    const steer = p5.Vector.sub(desiredLocation, this.velocity);
     steer.limit(this.maxForce);
     
     return steer;
   }
 
   seek(target) {
-    // sub = subtract
-    const desiredLocation = p5.Vector.sub(target, this.pos);
+    const desiredLocation = p5.Vector.sub(target, this.position);
     desiredLocation.setMag(speed);
 
-    const steer = p5.Vector.sub(desiredLocation, this.vel);
+    const steer = p5.Vector.sub(desiredLocation, this.velocity);
     steer.limit(this.maxForce);
     
     return steer;
   }
 
   flee(target) {
-    // sub = subtract
-    const desiredLocation = p5.Vector.sub(target, this.pos);
+    const desiredLocation = p5.Vector.sub(target, this.position);
     const distance = desiredLocation.mag() + ((Math.random() * 10) - 10);
 
-    // applies force only if mouse is close enough to the target
     if (distance < mouseDistanceForInteraction) {
       desiredLocation.setMag(this.maxSpeed);
       desiredLocation.mult(-1);
 
-      const steer = p5.Vector.sub(desiredLocation, this.vel);
+      const steer = p5.Vector.sub(desiredLocation, this.velocity);
       steer.limit(this.maxForce);
       
       return steer;
@@ -247,5 +257,4 @@ class Point {
       return zeroVector;
     }
   }
-  // END-VECTOR METHODS
 }
