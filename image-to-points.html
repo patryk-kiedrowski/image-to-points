@@ -1,8 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
-  <?php
-    header("Access-Control-Allow-Origin: *");
-  ?>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -25,21 +22,28 @@
         <p class="fps">FPS: <span id="fps">60</span></p>
       </div>
 
-      <h3 class="control__name">Scale up</h3>
+      <h3 class="control__name">*Scale up</h3>
       <div class="control">
         <p class="control__value">0</p>
         <input id="scaleUp" min="0" max="10" step="0.1" class="control__range" type="range">
         <p class="control__value">10</p>
       </div>
 
-      <h3 class="control__name">Brightness threshold</h3>
+      <h3 class="control__name">*Brightness threshold</h3>
       <div class="control">
         <p class="control__value">0</p>
         <input id="brightnessThreshold" min="0" max="255" class="control__range" type="range">
         <p class="control__value">255</p>
       </div>
 
-      <h3 class="control__name">Point size (px)</h3>
+      <h3 class="control__name">*Probability</h3>
+      <div class="control">
+        <p class="control__value">0</p>
+        <input id="probability" min="0" max="100" class="control__range" type="range">
+        <p class="control__value">100</p>
+      </div>
+
+      <h3 class="control__name">*Point size (px)</h3>
       <div class="control">
         <p class="control__value">0</p>
         <input id="pointSize" min="0" max="50" step="0.1" class="control__range" type="range">
@@ -53,7 +57,7 @@
         <p class="control__value">255</p>
       </div>
 
-      <h3 class="control__name">Max framerate (fps)</h3>
+      <h3 class="control__name">*Max framerate (fps)</h3>
       <div class="control">
         <p class="control__value">0</p>
         <input id="customFrameRate" min="0" max="100" class="control__range" type="range">
@@ -65,25 +69,18 @@
         <input id="pointColor" class="control__color" type="color">
       </div>
 
-      <h3 class="control__name">Image input</h3>
+      <h3 class="control__name">*Image input</h3>
       <div class="control">
         <input id="file" class="control__file" type="file">
       </div>
+
+      <div class="button-container">
+        <button id="apply-changes" type="button" class="button">Apply changes</button>
+        <p class="warning">*The canvas must be reset for the changes to apply</p>
+      </div>
     </div>
 
-    
-    <!-- <script src="p5.js" type="text/javascript"></script> -->
-
-    <script 
-      src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"
-    ></script>
-    <!-- <script src="jquery-3.3.1.js" type="text/javascript"></script> -->
-
-    <script
-      src="https://code.jquery.com/jquery-3.3.1.min.js"
-      integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-      crossorigin="anonymous"
-    ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.0.0/p5.min.js"></script>
     <script src="image-to-points.js" type="text/javascript"></script>
   </body>
 </html>
