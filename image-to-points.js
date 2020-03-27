@@ -11,6 +11,7 @@ let points = [];
 let mouse;
 let zeroVector;
 let inverseScaleUp;
+let offscreenCanvas;
 
 const fpsCounter = document.querySelector('#fps');
 const inputs = {
@@ -39,6 +40,14 @@ function handleMove(event) {
   myMouseY = Math.floor(event.clientY);
 }
 
+/**
+ * updates mouse position based on mouse coordinates times 
+ * the inverse of scaleUp to level the side effects of scaleUp
+ */
+function updateMouseVector() {
+  mouse = createVector(myMouseX * inverseScaleUp, myMouseY * inverseScaleUp);
+}
+
 function hexToRGB(hex) {
   return {
     r: parseInt(hex.slice(1, 3), 16),
@@ -47,7 +56,7 @@ function hexToRGB(hex) {
   }
 }
 
-function setValues() {
+function setControlInputs() {
   inputs['scaleUp'].value = scaleUp;
   inputs['brightnessThreshold'].value = brightnessThreshold;
   inputs['probability'].value = probability;
@@ -76,19 +85,51 @@ function preload() {
 }
 
 function setup() {
-  setValues();
+  setControlInputs();
+  setInitialValues();
+
+  createMainCanvas();
+  createOffscreenCanvas();
+
+  prepareImagePixels();
+  analyzeImageAndPreparePoints();
+}
+
+function draw() {
+  cleanOffscreenCanvas();
+  cleanCanvas();
+  updateMouseVector();
+  updatePoints();
+  drawFPS();
+  copyFromOffscreenToCanvas();
+}
+
+function setInitialValues() {
   points = [];
   zeroVector = createVector(0, 0);
   scaleUp = Math.round((window.innerHeight / img.height) * 100) / 100;
   inverseScaleUp = Math.round((1 / scaleUp) * 100) / 100;
+}
 
+function createMainCanvas() {
   createCanvas(img.width * scaleUp, img.height * scaleUp);
   frameRate(customFrameRate);
   background(0);
-  scale(1);
+  scale(scaleUp);
+}
 
+function createOffscreenCanvas() {
+  offscreenCanvas = createGraphics(img.width * scaleUp, img.height * scaleUp);
+  offscreenCanvas.frameRate(customFrameRate);
+  offscreenCanvas.background(0);
+  offscreenCanvas.scale(scaleUp);
+}
+
+function prepareImagePixels() {
   img.loadPixels();
+}
 
+function analyzeImageAndPreparePoints() {
   for (let i = 0; i < img.pixels.length; i += 4) {
     const pixel = { 
       r: img.pixels[i],
@@ -102,35 +143,23 @@ function setup() {
 
     if (pixelShouldBeIncluded) {
       if (avgOpacity >= brightnessThreshold) {
-        const x = Math.floor((i / 4) % img.width);
-        const y = Math.floor((i / 4) / img.width);
-        const dx = Math.random() - 0.5;
-        const dy = Math.random() - 0.5;
-
-        points.push(
-          new Point(x, y, dx, dy, avgOpacity)
-        );
+        createPoint(i, avgOpacity);
       }
     }
   }
 
   console.log(points.length);
-  scale(scaleUp);
 }
 
-function draw() {
-  cleanCanvas();
-  updateMouseVector();
-  updatePoints();
-  drawFPS();
-}
+function createPoint(i, avgOpacity) {
+  const x = Math.floor((i / 4) % img.width);
+  const y = Math.floor((i / 4) / img.width);
+  const dx = Math.random() - 0.5;
+  const dy = Math.random() - 0.5;
 
-/**
- * updates mouse position based on mouse coordinates times 
- * the inverse of scaleUp to level the side effects of scaleUp
- */
-function updateMouseVector() {
-  mouse = createVector(myMouseX * inverseScaleUp, myMouseY * inverseScaleUp);
+  points.push(
+    new Point(x, y, dx, dy, avgOpacity)
+  );
 }
 
 function cleanCanvas() {
@@ -138,6 +167,12 @@ function cleanCanvas() {
   rect(0, 0, img.width * scaleUp, img.height * scaleUp);
   noStroke();
   scale(scaleUp);
+}
+
+function cleanOffscreenCanvas() {
+  offscreenCanvas.fill(0);
+  offscreenCanvas.rect(0, 0, img.width, img.height);
+  offscreenCanvas.noStroke();
 }
 
 function updatePoints() {
@@ -152,6 +187,10 @@ function updatePoints() {
 
 function drawFPS() {
   fpsCounter.innerHTML = Math.round(getFrameRate());
+}
+
+function copyFromOffscreenToCanvas() {
+  image(offscreenCanvas, 0, 0, img.width, img.height);
 }
 
 class Point {
@@ -177,25 +216,25 @@ class Point {
   }
 
   variableOpacity() {
-    fill(pointColor.r, pointColor.g, pointColor.b, this.opacity);
-    ellipse(this.position.x, this.position.y, pointSize, pointSize);
+    offscreenCanvas.fill(pointColor.r, pointColor.g, pointColor.b, this.opacity);
+    offscreenCanvas.ellipse(this.position.x, this.position.y, pointSize, pointSize);
   }
   
   variableSize() {
-    fill(pointColor.r, pointColor.g, pointColor.b, 255);
-    ellipse(this.position.x, this.position.y, 5 * this.opacity / 255, 5 * this.opacity / 255);
+    offscreenCanvas.fill(pointColor.r, pointColor.g, pointColor.b, 255);
+    offscreenCanvas.ellipse(this.position.x, this.position.y, 5 * this.opacity / 255, 5 * this.opacity / 255);
   }
 
   variableOpacityAndSize() {
-    fill(pointColor.r, pointColor.g, pointColor.b, this.opacity);
-    ellipse(this.position.x, this.position.y, 5 * this.opacity / 255, 5 * this.opacity / 255);
+    offscreenCanvas.fill(pointColor.r, pointColor.g, pointColor.b, this.opacity);
+    offscreenCanvas.ellipse(this.position.x, this.position.y, 5 * this.opacity / 255, 5 * this.opacity / 255);
   }
 
   update() {
     this.position.add(this.velocity);
     this.velocity.add(this.acceleration);
     
-    // clears accelaration by multiplying it by 0
+    // clears accelaration
     this.acceleration.mult(0);
   }
 
