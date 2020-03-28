@@ -59,7 +59,7 @@ function hexToRGB(hex) {
 function setControlInputs() {
   inputs['scaleUp'].value = scaleUp;
   inputs['brightnessThreshold'].value = brightnessThreshold;
-  inputs['probability'].value = probability;
+  inputs['probability'].value = 100 - probability;
   inputs['pointSize'].value = pointSize;
   inputs['customFrameRate'].value = customFrameRate;
   inputs['mouseDistanceForInteraction'].value = mouseDistanceForInteraction;
@@ -67,12 +67,12 @@ function setControlInputs() {
 }
 
 function addListeners() {
-  inputs['scaleUp'].addEventListener('input', event => scaleUp = event.target.value);
-  inputs['brightnessThreshold'].addEventListener('input', event => brightnessThreshold = event.target.value);
-  inputs['probability'].addEventListener('input', event => probability = event.target.value);
-  inputs['pointSize'].addEventListener('input', event => pointSize = event.target.value);
-  inputs['customFrameRate'].addEventListener('input', event => customFrameRate = event.target.value);
-  inputs['mouseDistanceForInteraction'].addEventListener('input', event => mouseDistanceForInteraction = event.target.value);
+  inputs['scaleUp'].addEventListener('input', event => scaleUp = Number(event.target.value));
+  inputs['brightnessThreshold'].addEventListener('input', event => brightnessThreshold = Number(event.target.value));
+  inputs['probability'].addEventListener('input', event => probability = Number(100 - event.target.value));
+  inputs['pointSize'].addEventListener('input', event => pointSize = Number(event.target.value));
+  inputs['customFrameRate'].addEventListener('input', event => customFrameRate = Number(event.target.value));
+  inputs['mouseDistanceForInteraction'].addEventListener('input', event => Number(mouseDistanceForInteraction = event.target.value));
   inputs['pointColor'].addEventListener('input', event => pointColor = hexToRGB(event.target.value));
   inputs['apply-changes'].addEventListener('click', event => {
     setup();
@@ -187,6 +187,7 @@ function updatePoints() {
 
 function drawFPS() {
   fpsCounter.innerHTML = Math.round(getFrameRate());
+  frameRate(customFrameRate);
 }
 
 function copyFromOffscreenToCanvas() {
@@ -212,7 +213,7 @@ class Point {
   }
 
   draw() {
-    this.variableOpacityAndSize();
+    this.variableOpacity();
   }
 
   variableOpacity() {
